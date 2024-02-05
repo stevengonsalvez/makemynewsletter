@@ -24,6 +24,9 @@ class BrowserContentFetcher:
         if html_content:
             # Convert the HTML content to Markdown
             markdown_content = self.browser.convert_to_markdown(html_content)
+            # Append the source URL as an appendix
+            markdown_content += f"\n\n**Source URL:** {url}"
+            
             return markdown_content
         else:
             print(f"Failed to download content for {url}")
@@ -59,5 +62,6 @@ class BrowserContentFetcher:
 
 if __name__ == "__main__":
     fetcher = BrowserContentFetcher('safari')
-    test = fetcher.fetch_and_return_all_content()
-    print(test)
+    # test = fetcher.fetch_and_return_all_content()
+    test = fetcher.fetch_and_save_all_content()
+    # print(test)

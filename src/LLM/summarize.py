@@ -6,6 +6,7 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.docstore.document import Document
+from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from unstructured.cleaners.core import remove_punctuation,clean,clean_extra_whitespace
@@ -57,40 +58,63 @@ def summarize_markdown_content(markdown: str):
 
     pydantic_parser = PydanticOutputParser(pydantic_object=BlogSummary)
     format_instructions = pydantic_parser.get_format_instructions()
-    print(format_instructions)
+    # print(format_instructions)
+
+    md_format_instructions="""
+        The output should be formatted as a markdown with proper line endings "\n" and it should conform to the following structure
+        ```
+        # Title
+        ## Quick Summary
+        ### Key Points
+        ## Hyperlinks
+    """
 
 
     docs = markdown_chunker(markdown)
-    map_prompt = """
-        Write a concise summary of the following:
-        "{text}"
-        CONCISE SUMMARY:
-        """
-    map_prompt_template = PromptTemplate(template=map_prompt, input_variables=["text"], 
-                                        )
-    combine_prompt = """
-    Write a concise summary of the following text delimited by triple backquotes.
-    Return your response in bullet points which covers the key points of the text.
-    ```{text}```
-    {format_instructions}
-    """
-    combine_prompt_template = PromptTemplate(template=combine_prompt, input_variables=["text"], 
-                                             partial_variables={"format_instructions": pydantic_parser.get_format_instructions()})
-    summary_chain = load_summarize_chain(llm=llm,
-                                     chain_type='map_reduce',
-                                     map_prompt=map_prompt_template,
-                                     combine_prompt=combine_prompt_template,
-                                     #verbose=True
-                                    )
+    # map_prompt = """
+    #     Write a concise summary of the following:
+    #     "{text}"
+    #     CONCISE SUMMARY:
+    #     """
+    # map_prompt_template = PromptTemplate(template=map_prompt, input_variables=["text"], 
 
-    # n_tokens = llm.get_num_tokens(prompt_template)
-    # print (docs, n_tokens)
-    output = summary_chain.run(docs)
-    return clean_extra_whitespace(output)
+    bullet_prompt = """
+    Write a summary of the following text delimited by triple backquotes.
+    Return your response in bullet points which covers the key points of the text. Do not make it extremely concise , it should convey the core essence of the blog
+    Append the source_url of it at the beginning of the summary. The document will contain the text "source_url"
+    Create an appendix in the summary to contain all hyperlinks present in the text. Do not summarise the hyperlinks, need all hyperlinks to be present
+    ```{text}```
+    {md_format_instructions}
+    """
+    bullet_prompt_template = PromptTemplate(template=bullet_prompt, input_variables=["text"],
+                                            partial_variables={"md_format_instructions": md_format_instructions}
+                                        )
+    # combine_prompt = """
+    # Write a summary of the following text delimited by triple backquotes.
+    # Return your response in bullet points which covers the key points of the text.
+    # Have a reference of the source url . Preserve all links to images and external http and https links at the appendix. Capture the author name
+    # ```{text}```
+    # {format_instructions}
+    # """
+    
+    # combine_prompt_template = PromptTemplate(template=bullet_prompt, input_variables=["text"], 
+    #                                         partial_variables={"format_instructions": format_instructions}
+    #                                          )
+    # summary_chain = LLMChain(llm=llm,
+    #                                  chain_type='map_reduce',
+    #                                  map_prompt=map_prompt_template,
+    #                                 #  combine_prompt=combine_prompt_template,
+    #                                  #verbose=True
+    #                                 )
+
+    custom_summary_chain = LLMChain(llm=llm, prompt=bullet_prompt_template)
+    output = custom_summary_chain.run(docs)
+    return output
  
 
 
 def markdown_chunker(content: str):
+
     markdown_splitter = MarkdownTextSplitter (chunk_size=2000, chunk_overlap=0)
     docs = markdown_splitter.create_documents(content)
     return docs
@@ -102,6 +126,7 @@ llm = ChatOpenAI(model_name='gpt-3.5-turbo-0613', temperature=0, openai_api_key=
 
 fetcher = BrowserContentFetcher('safari')
 md = fetcher.fetch_and_return_all_content()
+# print(len(md))
 print(summarize_markdown_content(md))
 
 
