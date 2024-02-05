@@ -54,25 +54,33 @@ def summarize_document(url,model_name):
 
 def summarize_markdown_content(markdown: str):
     "Given this Markdown content that is extacted from a webpage"
+
+    pydantic_parser = PydanticOutputParser(pydantic_object=BlogSummary)
+    format_instructions = pydantic_parser.get_format_instructions()
+    print(format_instructions)
+
+
     docs = markdown_chunker(markdown)
     map_prompt = """
         Write a concise summary of the following:
         "{text}"
         CONCISE SUMMARY:
         """
-    map_prompt_template = PromptTemplate(template=map_prompt, input_variables=["text"])
+    map_prompt_template = PromptTemplate(template=map_prompt, input_variables=["text"], 
+                                        )
     combine_prompt = """
     Write a concise summary of the following text delimited by triple backquotes.
     Return your response in bullet points which covers the key points of the text.
     ```{text}```
-    BULLET POINT SUMMARY:
+    {format_instructions}
     """
-    combine_prompt_template = PromptTemplate(template=combine_prompt, input_variables=["text"])
+    combine_prompt_template = PromptTemplate(template=combine_prompt, input_variables=["text"], 
+                                             partial_variables={"format_instructions": pydantic_parser.get_format_instructions()})
     summary_chain = load_summarize_chain(llm=llm,
                                      chain_type='map_reduce',
                                      map_prompt=map_prompt_template,
                                      combine_prompt=combine_prompt_template,
-                                     verbose=True
+                                     #verbose=True
                                     )
 
     # n_tokens = llm.get_num_tokens(prompt_template)
@@ -80,7 +88,6 @@ def summarize_markdown_content(markdown: str):
     output = summary_chain.run(docs)
     return clean_extra_whitespace(output)
  
-
 
 
 def markdown_chunker(content: str):
@@ -93,8 +100,8 @@ def markdown_chunker(content: str):
 LLM_KEY=os.environ.get("OPENAI_API_KEY")
 llm = ChatOpenAI(model_name='gpt-3.5-turbo-0613', temperature=0, openai_api_key=LLM_KEY)
 
-# print(generate_document("https://blog.langchain.dev/crewai-unleashed-future-of-ai-agent-teams/"))
-# safari_url = BrowserFetch("safari");
 fetcher = BrowserContentFetcher('safari')
 md = fetcher.fetch_and_return_all_content()
 print(summarize_markdown_content(md))
+
+

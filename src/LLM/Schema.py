@@ -1,5 +1,6 @@
 from pydantic import BaseModel, HttpUrl, Field
 from typing import List
+from langchain.output_parsers import PydanticOutputParser
 
 
 class BlogSummary(BaseModel):
