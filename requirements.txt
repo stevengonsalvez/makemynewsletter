@@ -1,5 +1,15 @@
 requests
 html2text
 pyobjc
-'pyobjc[allbindings]'
 selenium
+dotenv
+python-dotenv 
+langchain 
+openai 
+pypdf 
+pymupdf
+unstructured
+python-libmagic
+langchain_community
+tiktoken
+langchain-openai
