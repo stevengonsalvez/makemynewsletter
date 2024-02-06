@@ -13,8 +13,12 @@ from unstructured.cleaners.core import remove_punctuation, clean, clean_extra_wh
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 import Schema
-import Utils
 
+folder_utils_path = os.path.abspath('./src/Utils')
+if folder_utils_path not in sys.path:
+    sys.path.append(folder_utils_path)
+
+from tools import markdown_chunker
 
 class Summarizer:
     def __init__(self):
@@ -52,7 +56,7 @@ class Summarizer:
             ## Hyperlinks
         """
 
-        docs = Utils.markdown_chunker(markdown)
+        docs = markdown_chunker(markdown)
 
         bullet_prompt = """
         Write a summary of the following text delimited by triple backquotes.
@@ -62,11 +66,12 @@ class Summarizer:
         ```{text}```
         {md_format_instructions}
         """
+
         bullet_prompt_template = PromptTemplate(template=bullet_prompt, input_variables=["text"],
                                                 partial_variables={"md_format_instructions": md_format_instructions}
                                             )
 
-        custom_summary_chain = LLMChain(llm=self.llm, prompt=bullet_prompt_template)
+        custom_summary_chain = LLMChain(llm=self.llm, prompt=bullet_prompt_template, chain_type = 'map_reduce')
         output = custom_summary_chain.run(docs)
         return output
 

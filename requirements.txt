@@ -13,3 +13,6 @@ python-libmagic
 langchain_community
 tiktoken
 langchain-openai
+langchain_google_vertexai
+boto3
+functools
