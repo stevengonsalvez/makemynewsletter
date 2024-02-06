@@ -163,3 +163,6 @@ output_markdown
 
 #idea
 .idea/
+
+#db
+db

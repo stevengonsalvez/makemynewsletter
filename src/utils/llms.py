@@ -51,3 +51,4 @@ def get_google_llm():
 @lru_cache(maxsize=1)
 def get_mixtral_fireworks():
     return ChatFireworks(model="accounts/fireworks/models/mixtral-8x7b-instruct")
+
