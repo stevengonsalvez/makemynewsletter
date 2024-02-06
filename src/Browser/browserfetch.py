@@ -1,5 +1,5 @@
-from Safari import SafariBrowser
-from Chrome import ChromeBrowser
+from safari import SafariBrowser
+from chrome import ChromeBrowser
 import requests
 
 class BrowserContentFetcher:

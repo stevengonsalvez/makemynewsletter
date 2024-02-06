@@ -8,12 +8,12 @@ if folder_llm_path not in sys.path:
     sys.path.append(folder_llm_path)
 if folder_browser_path not in sys.path:
     sys.path.append(folder_browser_path)
-from LLM import Summarize
-from Browser import BrowserFetch
+from LLM import summarize
+from Browser import browserfetch
 
-fetcher = BrowserFetch.BrowserContentFetcher('safari')
+fetcher = browserfetch.BrowserContentFetcher('safari')
 content_list = fetcher.fetch_and_return_all_content()
-summarizer = Summarize.Summarizer()
+summarizer = summarize.Summarizer()
 
 for item in content_list:
 
