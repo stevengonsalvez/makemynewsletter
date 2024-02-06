@@ -8,7 +8,7 @@ import chromadb
 class Embedder:
     def __init__(self):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large",api_key=os.environ.get("OPENAI_API_KEY"))
-        self.persist_directory = 'db'
+        self.persist_directory = 'output_db'
 
     def embed_document_chroma(self, doc: [list]):
         "Given a langchain Document, return the embeddings"
