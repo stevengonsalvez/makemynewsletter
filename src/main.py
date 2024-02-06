@@ -16,4 +16,9 @@ content_list = fetcher.fetch_and_return_all_content()
 summarizer = Summarize.Summarizer()
 
 for item in content_list:
-    print(summarizer.summarize_markdown_content(item))
+
+    # Converting back to a list of one as markdownchunker needs a list
+    i_arr = []
+    i_arr.append(item)
+    summary = summarizer.summarize_markdown_content(i_arr)
+    print (summary)

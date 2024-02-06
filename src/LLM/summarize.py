@@ -62,7 +62,6 @@ class Summarizer:
         Write a summary of the following text delimited by triple backquotes.
         Return your response in bullet points which covers the key points of the text. Do not make it extremely concise, it should convey the core essence of the blog
         Append the source_url of it at the beginning of the summary. The document will contain the text "source_url"
-        Create an appendix in the summary to contain all hyperlinks present in the text. Do not summarise the hyperlinks, need all hyperlinks to be present
         ```{text}```
         {md_format_instructions}
         """
@@ -71,7 +70,7 @@ class Summarizer:
                                                 partial_variables={"md_format_instructions": md_format_instructions}
                                             )
 
-        custom_summary_chain = LLMChain(llm=self.llm, prompt=bullet_prompt_template, chain_type = 'map_reduce')
+        custom_summary_chain = LLMChain(llm=self.llm, prompt=bullet_prompt_template)
         output = custom_summary_chain.run(docs)
         return output
 
