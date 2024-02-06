@@ -11,10 +11,12 @@ from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from unstructured.cleaners.core import remove_punctuation, clean, clean_extra_whitespace
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-import Schema
+import schema
+# from src.utils.tools import markdown_chunker
 
-folder_utils_path = os.path.abspath('./src/Utils')
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+folder_utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 if folder_utils_path not in sys.path:
     sys.path.append(folder_utils_path)
 
@@ -44,7 +46,7 @@ class Summarizer:
 
     def summarize_markdown_content(self, markdown: str):
         "Given this Markdown content that is extacted from a webpage"
-        pydantic_parser = PydanticOutputParser(pydantic_object=Schema.BlogSummary)
+        pydantic_parser = PydanticOutputParser(pydantic_object=schema.BlogSummary)
         format_instructions = pydantic_parser.get_format_instructions()
 
         md_format_instructions = """
