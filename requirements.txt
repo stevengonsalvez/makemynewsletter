@@ -17,3 +17,4 @@ langchain_google_vertexai
 boto3
 functools
 chromadb
+gitpython
