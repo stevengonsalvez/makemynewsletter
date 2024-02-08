@@ -57,18 +57,14 @@ st.button("Run", on_click=click_button)
 
 
 if st.session_state.clicked:
-#     with st.spinner("Generating response..."):
-#         if validators.url(git_repo):
-#             vectordb = get_chroma_db(git_repo)
-#             query = st.text_input("Ask a question about the codebase:")
-#             if st.button("Ask"):
-#                 result = run_llm(vectordb, query)
-#                 st.write(result)
-#                 print(result)
-#         else:
-#             st.write("Please enter a valid git repository url")
-
-        prompt = st.chat_input("Say something")
-        if prompt:
-            st.write(f"User has sent the following prompt: {prompt}")
+    with st.spinner("Generating response..."):
+        if validators.url(git_repo):
+            vectordb = get_chroma_db(git_repo)
+            query = st.text_input("Ask a question about the codebase:")
+            if st.button("Ask"):
+                result = run_llm(vectordb, query)
+                st.write(result)
+                print(result)
+        else:
+            st.write("Please enter a valid git repository url")
 
