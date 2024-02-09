@@ -21,31 +21,32 @@ warnings.simplefilter("ignore", category=DeprecationWarning)
 
 class CodebaseInteraction:
     def __init__(self):
+        self.repo_index_directory = "file_db"
+        self.repo_index_filename = "repo_index.json"
+        self.repo_index_filepath = os.path.join(self.repo_index_directory, self.repo_index_filename)
         self.repo_index = self.load_repo_index()
 
     def load_repo_index(self):
-        directory = "file_db"
-        filename = "repo_index.json"
-        filepath = os.path.join(directory, filename)
-
         # Ensure the directory exists
-        os.makedirs(directory, exist_ok=True)
+        os.makedirs(self.repo_index_directory, exist_ok=True)
 
         try:
-            with open(filepath, "r") as file:
-                return json.load(file)
-        except FileNotFoundError:
-            # If the file does not exist, create it with an empty list
-            repo_index = []
-            with open(filepath, "w") as file:
-                json.dump(repo_index, file)
-            return repo_index
+            if os.path.exists(self.repo_index_filepath) and os.path.getsize(self.repo_index_filepath) > 0:
+                with open(self.repo_index_filepath, "r") as file:
+                    return json.load(file)
+            else:
+                # If the file does not exist or is empty, create it with an empty list
+                repo_index = []
+                with open(self.repo_index_filepath, "w") as file:
+                    json.dump(repo_index, file)
+                return repo_index
         except Exception as e:
             # Handle other exceptions
             raise Exception(f"Failed to load repo index: {str(e)}")
 
     def save_repo_index(self):
-        with open("repo_index.json", "w") as file:
+        with open(self.repo_index_filepath, "w") as file:
+            print(self.repo_index_filepath)
             json.dump(self.repo_index, file)
 
     # Function to create a hash from a given string
