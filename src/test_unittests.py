@@ -9,7 +9,7 @@ import pytest
 import json
 import logging
 
-from chatapp import CodebaseInteraction
+from codebase import CodebaseInteraction
 class TestCodebaseInteraction:
 
     # CodebaseInteraction can be instantiated without any errors
