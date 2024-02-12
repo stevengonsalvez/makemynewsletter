@@ -13,19 +13,24 @@ import warnings
 import uuid
 import json
 
-warnings.simplefilter("ignore", category=DeprecationWarning)
-
 
 warnings.simplefilter("ignore", category=DeprecationWarning)
 
 
 class CodebaseInteraction:
-    def __init__(self):
+    def __init__(self, repo_url: str = None):
         self.repo_index_directory = "file_db"
         self.repo_index_filename = "repo_index.json"
         self.repo_index_filepath = os.path.join(self.repo_index_directory, self.repo_index_filename)
         self.repo_index = self.load_repo_index()
+        self.repo_url = repo_url
 
+    def get_embedding_function(self):
+        return OpenAIEmbeddings(
+            model = "text-embedding-3-large",
+            disallowed_special=(), openai_api_key=os.environ.get("OPENAI_API_KEY")
+        )
+    
     def load_repo_index(self):
         # Ensure the directory exists
         os.makedirs(self.repo_index_directory, exist_ok=True)
@@ -49,28 +54,30 @@ class CodebaseInteraction:
             print(self.repo_index_filepath)
             json.dump(self.repo_index, file)
 
-    # Function to create a hash from a given string
-    def hash_string(self, string):
-        hashed = hex(hash(string))
-        return hashed
 
-    def get_embedding_function(self):
-        return OpenAIEmbeddings(
-            disallowed_special=(), openai_api_key=os.environ.get("OPENAI_API_KEY")
-        )
+    # Function to extract the last part of a github repo url string
+    def extract_repo_name(self):
+        repo_name = self.repo_url.split("/")[-1]
+        return repo_name
+    
+    # # Function to create a hash from a given string
+    # def hash_string(self, string):
+    #     hashed = self.extract_repo_name()
+    #     return hashed
 
-    def get_chroma_db(self, repo_url: str):
+
+    def get_chroma_db(self):
         # check if repo has already been processed
-        if repo_url in self.repo_index:
+        if self.repo_url in self.repo_index:
             return Chroma(
                 persist_directory="output_db",
                 embedding_function=self.get_embedding_function(),
-                collection_name=self.hash_string(repo_url),
+                collection_name=self.extract_repo_name(),
             )
         else:
             uuid_value = uuid.uuid4()
             repo_path = "/tmp/" + str(uuid_value)
-            repo = Repo.clone_from(repo_url, to_path=repo_path)
+            repo = Repo.clone_from(self.repo_url, to_path=repo_path)
             loader = GenericLoader.from_filesystem(
                 repo_path,
                 glob="**/*",
@@ -88,12 +95,12 @@ class CodebaseInteraction:
                 texts,
                 self.get_embedding_function(),
                 persist_directory="output_db",
-                collection_name=self.hash_string(repo_url),
+                collection_name=self.hash_string(self.repo_url),
             )
             db.persist()
 
             # Update the repository index
-            self.repo_index.append(repo_url)
+            self.repo_index.append(self.repo_url)
             self.save_repo_index()
 
         return db
@@ -110,7 +117,6 @@ class CodebaseInteraction:
             retriever=vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 8}),
             memory=memory,
         )
+        print(memory.load_memory_variables({}))
         result = qa(query)
         return result
-
-

@@ -16,7 +16,8 @@ for msg in msgs.messages:
 
 # user input prompt that will accept a git repository url
 git_repo = st.text_input("Enter a git repository url:")
-
+codebase = CodebaseInteraction(git_repo)
+print (codebase.repo_index)
 
 if "clicked" not in st.session_state:
     st.session_state.clicked = False
@@ -28,15 +29,17 @@ def click_button():
 
 st.button("Run", on_click=click_button)
 
-
+print("repository", git_repo)   
 if st.session_state.clicked:
     if validators.url(git_repo):
-        vectordb = CodebaseInteraction.get_chroma_db(git_repo)
+        vectordb = codebase.get_chroma_db()
         query = st.text_input("Ask a question about the codebase:", key="query_input")
         if st.button("Ask"):
             with st.spinner("Generating response..."):
-                result = CodebaseInteraction.run_llm(vectordb, query)
+                print ("query", query)
+                result = codebase.run_llm(vectordb, query)
                 st.chat_message("human").write(query)
                 st.chat_message("ai").write(str(result))
     else:
         st.write("Please enter a valid git repository url")
+
