@@ -48,7 +48,7 @@ class Summarizer:
         summary = chain.run([tmp_doc])
         return clean_extra_whitespace(summary)
 
-    def summarize_markdown_content(self, markdown: str):
+    def summarize_markdown_content(self, markdown: list):
         "Given this Markdown content that is extacted from a webpage"
         pydantic_parser = PydanticOutputParser(pydantic_object=BlogSummary)
         format_instructions = pydantic_parser.get_format_instructions()

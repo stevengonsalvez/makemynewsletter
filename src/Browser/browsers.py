@@ -73,9 +73,13 @@ class SafariBrowser(IBrowserInterface):
         return [tab.URL() for window in safari.windows() for tab in window.tabs()]
 
     def download_content(self, url):
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.text
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raises an HTTPError if the response was an error
+            return response.text
+        except requests.RequestException as e:
+            print(f"Error downloading {url}: {e}")
+            return None
 
     def convert_to_markdown(self, html_content):
         h = html2text.HTML2Text()
