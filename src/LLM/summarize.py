@@ -9,44 +9,48 @@ from langchain.docstore.document import Document
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
+from langchain_openai import OpenAI
 from unstructured.cleaners.core import remove_punctuation, clean, clean_extra_whitespace
 import warnings
-import schema
+
+from src.llm.schemas import BlogSummary
+from src.utils.tools import markdown_chunker
 # from src.utils.tools import markdown_chunker
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-folder_utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
-if folder_utils_path not in sys.path:
-    sys.path.append(folder_utils_path)
+# Shame : module imports not working
+# folder_utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+# if folder_utils_path not in sys.path:
+#     sys.path.append(folder_utils_path)
 
-from tools import markdown_chunker
+
+def generate_document(url):
+    "Given an URL, return a langchain Document to further processing."
+    loader = UnstructuredURLLoader(urls=[url], mode="elements",
+                                   post_processors=[clean, remove_punctuation, clean_extra_whitespace])
+    elements = loader.load()
+    selected_elements = [e for e in elements if e.metadata['category'] == "NarrativeText"]
+    full_clean = " ".join([e.page_content for e in selected_elements])
+    return Document(page_content=full_clean, metadata={"source": url})
+
 
 class Summarizer:
     def __init__(self):
         self.llm_key = os.environ.get("OPENAI_API_KEY")
         self.llm = ChatOpenAI(model_name='gpt-3.5-turbo-0613', temperature=0, openai_api_key=self.llm_key)
 
-    def generate_document(self, url):
-        "Given an URL, return a langchain Document to further processing."
-        loader = UnstructuredURLLoader(urls=[url], mode="elements",
-                                       post_processors=[clean, remove_punctuation, clean_extra_whitespace])
-        elements = loader.load()
-        selected_elements = [e for e in elements if e.metadata['category'] == "NarrativeText"]
-        full_clean = " ".join([e.page_content for e in selected_elements])
-        return Document(page_content=full_clean, metadata={"source": url})
-
     def summarize_document(self, url, model_name):
         "Given an URL return the summary from OpenAI model"
-        llm = OpenAI(model_name='gpt-3.5-turbo-0613', temperature=0, openai_api_key=openai_key)
+        llm = self.llm
         chain = load_summarize_chain(llm, chain_type="stuff")
-        tmp_doc = self.generate_document(url)
+        tmp_doc = generate_document(url)
         summary = chain.run([tmp_doc])
         return clean_extra_whitespace(summary)
 
     def summarize_markdown_content(self, markdown: str):
         "Given this Markdown content that is extacted from a webpage"
-        pydantic_parser = PydanticOutputParser(pydantic_object=schema.BlogSummary)
+        pydantic_parser = PydanticOutputParser(pydantic_object=BlogSummary)
         format_instructions = pydantic_parser.get_format_instructions()
 
         md_format_instructions = """

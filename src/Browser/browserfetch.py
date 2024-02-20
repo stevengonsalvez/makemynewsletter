@@ -1,6 +1,7 @@
-from safari import SafariBrowser
-from chrome import ChromeBrowser
 import requests
+
+from src.browser.browsers import SafariBrowser, ChromeBrowser
+
 
 class BrowserContentFetcher:
     def __init__(self, browser_type):

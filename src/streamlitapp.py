@@ -1,7 +1,7 @@
 import streamlit as st
 import validators
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-from codebase import CodebaseInteraction
+from codebase.codebase import CodebaseInteraction
 
 
 # Initialize StreamlitChatMessageHistory

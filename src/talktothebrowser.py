@@ -3,24 +3,25 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationSummaryMemory
 from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from chromadb.config import Settings
 import chromadb
 
-folder_llm_path = os.path.abspath('./src/LLM')  # Adjust this path as necessary
-folder_browser_path = os.path.abspath('./src/Browser')
-folder_util_path = os.path.abspath('./src/utils')
+# Shame : module imports not working
+# folder_llm_path = os.path.abspath('./src/llm')  # Adjust this path as necessary
+# folder_browser_path = os.path.abspath('./src/browser')
+# folder_util_path = os.path.abspath('./src/utils')
+#
+# # Only append if not already in sys.path
+# if folder_llm_path not in sys.path:
+#     sys.path.append(folder_llm_path)
+# if folder_browser_path not in sys.path:
+#     sys.path.append(folder_browser_path)
+# if folder_util_path not in sys.path:
+#     sys.path.append(folder_util_path)
 
-# Only append if not already in sys.path
-if folder_llm_path not in sys.path:
-    sys.path.append(folder_llm_path)
-if folder_browser_path not in sys.path:
-    sys.path.append(folder_browser_path)
-if folder_util_path not in sys.path:
-    sys.path.append(folder_util_path)
-
-from LLM import summarize, storage
-from Browser import browserfetch
+from llm import summarize, storage
+from browser import browserfetch
 from utils import tools
 
 fetcher = browserfetch.BrowserContentFetcher('safari')

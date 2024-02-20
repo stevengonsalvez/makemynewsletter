@@ -20,3 +20,4 @@ chromadb
 gitpython
 pytest
 pytest-mock
+langchainhub
