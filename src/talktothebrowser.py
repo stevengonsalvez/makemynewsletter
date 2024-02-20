@@ -44,7 +44,8 @@ question = "is crewAI a platform?"
 llm = ChatOpenAI(
             model_name="gpt-4", openai_api_key=os.environ.get("OPENAI_API_KEY")
         )
-memory = ConversationSummaryMemory(llm=llm, return_messages=True)
+memory = ConversationSummaryMemory(memory_key="chat_history",
+                                    llm=llm, return_messages=True)
 vectorstore = Chroma(persist_directory='output_db', embedding_function=OpenAIEmbeddings(model="text-embedding-3-large",api_key=os.environ.get("OPENAI_API_KEY")))
 qa = ConversationalRetrievalChain.from_llm(
             llm=llm,

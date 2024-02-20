@@ -101,7 +101,7 @@ class CodebaseInteraction:
                 texts,
                 self.get_embedding_function(),
                 persist_directory="output_db",
-                collection_name=self.hash_string(self.repo_url),
+                collection_name=self.extract_repo_name(),
             )
             db.persist()
 
@@ -128,7 +128,7 @@ class CodebaseInteraction:
             memory_key="chat_history",
             return_messages=True,
             input_key="query",
-            output_key="answer",
+            output_key="result",
         )
 
         return llm, memory
@@ -159,5 +159,5 @@ class CodebaseInteraction:
             chain_type_kwargs=chain_type_kwargs,
         )
         result = qa({"query": query})
-        print(result["results"])
+        print(result)
         return result
