@@ -8,15 +8,16 @@ from abc import ABC, abstractmethod
 
 
 class LLMManager:
-    def __init__(self):
+    def __init__(self, config=llm_config):
+        self.config = config
         self.llm = self.initialize_llm()
 
     def initialize_llm(self):
-        if llm_config["type"] == "openai":
+        if self.config["type"] == "openai":
             return OpenAIModel(
-                model=llm_config["model"],
-                key=llm_config["key"],
-                embedding_model=llm_config["embedding_model"],
+                model=self.config["model"],
+                key=self.config["key"],
+                embedding_model=self.config["embedding_model"],
             )
         # Add initialization for other LLM types as needed
         else:

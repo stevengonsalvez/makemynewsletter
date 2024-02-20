@@ -84,9 +84,3 @@ class ChromaVectordb(IVectordb):
             collection_name=self.collection_name,
             persist_directory=self.persist_directory,
         )
-        # self.get_db().persist()
-
-
-# test_llm = LLMManager()
-# print(LLMManager().get_embedding())
-# # vectordb_manager = VectordbManager(llm_manager=test_llm)

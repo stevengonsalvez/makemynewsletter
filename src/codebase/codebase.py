@@ -14,26 +14,53 @@ import warnings
 import uuid
 import json
 import utils.prompts as prompts
-
+from src.llm.llm_manager import LLMManager
+from src.llm.vectordb import VectordbManager
+from src.config import codebase_vectordb
 
 warnings.simplefilter("ignore", category=DeprecationWarning)
 
 
 class CodebaseInteraction:
-    def __init__(self, repo_url: str = None):
+    def __init__(
+        self,
+        repo_url: str = None,
+        config_db=codebase_vectordb,
+        llm_manager: LLMManager = None,
+    ):
+        self.repo_url = repo_url
+        self.config_db = config_db
+        self.llm_manager = llm_manager
+
+        default_vector_dbconfig = dict(
+                type=self.config_db["type"],
+                persist_directory=self.config_db["persist_directory"],
+                collection_name=self.extract_repo_name(),
+            )
+        
+        
+        self.storage_obj = VectordbManager(config=default_vector_dbconfig,llm_manager=self.llm_manager)
+
         self.repo_index_directory = "file_db"
         self.repo_index_filename = "repo_index.json"
         self.repo_index_filepath = os.path.join(
             self.repo_index_directory, self.repo_index_filename
         )
         self.repo_index = self.load_repo_index()
-        self.repo_url = repo_url
+        self.embedding_function = self.llm_manager.get_embedding()
 
-    def get_embedding_function(self):
-        return OpenAIEmbeddings(
-            model="text-embedding-3-large",
-            disallowed_special=(),
-            openai_api_key=os.environ.get("OPENAI_API_KEY"),
+
+        # memory = ConversationSummaryMemory(
+        #     llm=llm, memory_key="chat_history", return_messages=True
+        # )
+        # due to this error need to use multiple keys
+        # https://github.com/langchain-ai/langchain/issues/2256#issuecomment-1645351967
+        self.memory = ConversationBufferMemory(
+            llm=self.llm_manager.get_llm(),
+            memory_key="chat_history",
+            return_messages=True,
+            input_key="query",
+            output_key="result",
         )
 
     def load_repo_index(self):
@@ -75,11 +102,7 @@ class CodebaseInteraction:
     def get_chroma_db(self):
         # check if repo has already been processed
         if self.repo_url in self.repo_index:
-            return Chroma(
-                persist_directory="output_db",
-                embedding_function=self.get_embedding_function(),
-                collection_name=self.extract_repo_name(),
-            )
+            return self.storage_obj.get_db()
         else:
             uuid_value = uuid.uuid4()
             repo_path = "/tmp/" + str(uuid_value)
@@ -97,13 +120,13 @@ class CodebaseInteraction:
                 language=Language.PYTHON, chunk_size=2000, chunk_overlap=2
             )
             texts = python_splitter.split_documents(documents)
-            db = Chroma.from_documents(
+            db = self.storage_obj.get_db().from_documents(
                 texts,
-                self.get_embedding_function(),
+                self.embedding_function(),
                 persist_directory="output_db",
                 collection_name=self.extract_repo_name(),
             )
-            db.persist()
+            # db.persist()
 
             # Update the repository index
             self.repo_index.append(self.repo_url)
@@ -111,53 +134,29 @@ class CodebaseInteraction:
 
         return db
 
-    def get_llm_model(self):
-        llm = ChatOpenAI(
-            model_name="gpt-4-1106-preview",
-            openai_api_key=os.environ.get("OPENAI_API_KEY"),
-        )
+    def conversational_chat_llm(self, query: str):
 
-        # memory = ConversationSummaryMemory(
-        #     llm=llm, memory_key="chat_history", return_messages=True
-        # )
-        # due to this error need to use multiple keys
-        # https://github.com/langchain-ai/langchain/issues/2256#issuecomment-1645351967
-
-        memory = ConversationBufferMemory(
-            llm=llm,
-            memory_key="chat_history",
-            return_messages=True,
-            input_key="query",
-            output_key="result",
-        )
-
-        return llm, memory
-
-    def conversational_chat_llm(self, llm, memory, vectordb, query: str):
         qa = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 8}),
-            memory=memory,
+            llm=self.llm_manager.get_llm(),
+            retriever=self.storage_obj.get_db().as_retriever(search_type="mmr", search_kwargs={"k": 8}),
+            memory=self.memory,
         )
-        print(memory.load_memory_variables({}))
         result = qa(query)
         return result
 
-    def retrieval_qa_with_sources(self, llm, memory, vectordb, query: str):
+    def retrieval_qa_with_sources(self, query: str):
 
-        print(prompts.get_codeqa_prompt_hub())
         chain_type_kwargs = {
             "prompt": prompts.get_codeqa_prompt_hub(),
         }
 
         qa = RetrievalQA.from_chain_type(
-            llm=llm,
+            llm=self.llm_manager.get_llm(),
             chain_type="stuff",
-            retriever=vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 8}),
-            memory=memory,
+            retriever=self.storage_obj.get_db().as_retriever(search_type="mmr", search_kwargs={"k": 8}),
+            memory=self.memory,
             return_source_documents=True,
             chain_type_kwargs=chain_type_kwargs,
         )
         result = qa({"query": query})
-        print(result)
         return result

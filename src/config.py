@@ -16,7 +16,6 @@ vectordb = dict(
 codebase_vectordb = dict(
     type='chroma',
     persist_directory='output_db',
-    collection_name='codebase'
     # collection_name='codebase_' + str(uuid.uuid4())
 )
 
