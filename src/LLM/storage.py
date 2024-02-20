@@ -3,6 +3,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from chromadb.config import Settings
 import chromadb
+from chromadb.utils import embedding_functions
 
 
 class Embedder:

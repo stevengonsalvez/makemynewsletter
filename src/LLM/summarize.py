@@ -15,14 +15,9 @@ import warnings
 
 from src.llm.schemas import BlogSummary
 from src.utils.tools import markdown_chunker
-# from src.utils.tools import markdown_chunker
+from src.llm.llm_manager import LLMManager
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-# Shame : module imports not working
-# folder_utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils'))
-# if folder_utils_path not in sys.path:
-#     sys.path.append(folder_utils_path)
 
 
 def generate_document(url):
@@ -36,14 +31,12 @@ def generate_document(url):
 
 
 class Summarizer:
-    def __init__(self):
-        self.llm_key = os.environ.get("OPENAI_API_KEY")
-        self.llm = ChatOpenAI(model_name='gpt-3.5-turbo-0613', temperature=0, openai_api_key=self.llm_key)
+    def __init__(self, llm_manager: LLMManager=None):
+        self.llm = llm_manager.get_llm()
 
-    def summarize_document(self, url, model_name):
-        "Given an URL return the summary from OpenAI model"
-        llm = self.llm
-        chain = load_summarize_chain(llm, chain_type="stuff")
+    def summarize_document(self, url: str):
+        "Given an URL return the summary from LLM model"
+        chain = load_summarize_chain(self.llm, chain_type="stuff")
         tmp_doc = generate_document(url)
         summary = chain.run([tmp_doc])
         return clean_extra_whitespace(summary)

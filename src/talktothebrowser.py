@@ -2,32 +2,19 @@ import sys, os
 from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationSummaryMemory
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from chromadb.config import Settings
-import chromadb
 
-# Shame : module imports not working
-# folder_llm_path = os.path.abspath('./src/llm')  # Adjust this path as necessary
-# folder_browser_path = os.path.abspath('./src/browser')
-# folder_util_path = os.path.abspath('./src/utils')
-#
-# # Only append if not already in sys.path
-# if folder_llm_path not in sys.path:
-#     sys.path.append(folder_llm_path)
-# if folder_browser_path not in sys.path:
-#     sys.path.append(folder_browser_path)
-# if folder_util_path not in sys.path:
-#     sys.path.append(folder_util_path)
 
-from llm import summarize, storage
-from browser import browserfetch
-from utils import tools
+from src.browser import browserfetch
+from src.llm import summarize, vectordb, llm_manager
+from src.utils import tools
 
 fetcher = browserfetch.BrowserContentFetcher('safari')
 content_list = fetcher.fetch_and_return_all_content()
-summarizer = summarize.Summarizer()
-storage_obj = storage.Embedder()
+llm_mgr = llm_manager.LLMManager()
+
+
+summarizer = summarize.Summarizer(llm_manager=llm_mgr)
+storage_obj = vectordb.VectordbManager(llm_manager=llm_mgr)
 
 for item in content_list:
 
@@ -35,18 +22,16 @@ for item in content_list:
     i_arr = [item]
     summary = summarizer.summarize_markdown_content(i_arr)
     s_arr = tools.generate_tokens(summary)
-    storage_obj.embed_document_chroma(s_arr)
+    storage_obj.embed_documents(s_arr)
 
 print(storage_obj.get_documents())
 
 #chat question to the Llm
 question = "is crewAI a platform?"
-llm = ChatOpenAI(
-            model_name="gpt-4", openai_api_key=os.environ.get("OPENAI_API_KEY")
-        )
+llm = llm_mgr.get_llm()
 memory = ConversationSummaryMemory(memory_key="chat_history",
                                     llm=llm, return_messages=True)
-vectorstore = Chroma(persist_directory='output_db', embedding_function=OpenAIEmbeddings(model="text-embedding-3-large",api_key=os.environ.get("OPENAI_API_KEY")))
+vectorstore = storage_obj.get_db()
 qa = ConversationalRetrievalChain.from_llm(
             llm=llm,
             retriever=vectorstore.as_retriever(search_type="mmr", search_kwargs={"k": 8}),
