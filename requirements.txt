@@ -21,3 +21,4 @@ gitpython
 pytest
 pytest-mock
 langchainhub
+chainlit

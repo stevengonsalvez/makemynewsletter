@@ -41,6 +41,8 @@ class CodebaseInteraction:
         
         self.storage_obj = VectordbManager(config=default_vector_dbconfig,llm_manager=self.llm_manager)
 
+ 
+
         self.repo_index_directory = "file_db"
         self.repo_index_filename = "repo_index.json"
         self.repo_index_filepath = os.path.join(
@@ -49,7 +51,9 @@ class CodebaseInteraction:
         self.repo_index = self.load_repo_index()
         self.embedding_function = self.llm_manager.get_embedding()
 
-
+       ## initiating storage of code in vectordbmanager
+        _ = self.get_chroma_db()
+        
         # memory = ConversationSummaryMemory(
         #     llm=llm, memory_key="chat_history", return_messages=True
         # )
@@ -122,7 +126,7 @@ class CodebaseInteraction:
             texts = python_splitter.split_documents(documents)
             db = self.storage_obj.get_db().from_documents(
                 texts,
-                self.embedding_function(),
+                self.embedding_function,
                 persist_directory="output_db",
                 collection_name=self.extract_repo_name(),
             )
