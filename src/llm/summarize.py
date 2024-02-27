@@ -43,8 +43,9 @@ class Summarizer:
 
     def summarize_markdown_content(self, markdown: list):
         "Given this Markdown content that is extacted from a webpage"
-        pydantic_parser = PydanticOutputParser(pydantic_object=BlogSummary)
-        format_instructions = pydantic_parser.get_format_instructions()
+        # Need to use pydantic parser
+        # pydantic_parser = PydanticOutputParser(pydantic_object=BlogSummary)
+        # format_instructions = pydantic_parser.get_format_instructions()
 
         md_format_instructions = """
             The output should be formatted as a markdown with proper line endings "\n" and it should conform to the following structure
