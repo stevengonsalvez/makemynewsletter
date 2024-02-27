@@ -16,6 +16,7 @@ The newsletter platform is designed to be your second brain, helping you manage 
     - [Codebase Features](#codebase-features)
   - [Contributing](#contributing)
   - [Acknowledgements](#acknowledgements)
+  - [Gotcha's](#gotchas)
 
 
 
@@ -69,3 +70,9 @@ We welcome contributions to the Developer Productivity Platform! Please read thr
 ## Acknowledgements
 
 
+## Gotcha's
+- if `pyobjc` does not install properly then do the following for using foundation and applescript on the mac, need to execute this separately within the virtualenv
+
+```
+pip install -U 'pyobjc[allbindings]'
+```
