@@ -10,10 +10,11 @@ from langchain.chains import RetrievalQAWithSourcesChain, RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.output_parsers import StrOutputParser
 import warnings
 import uuid
 import json
-import utils.prompts as prompts
+import src.utils.prompts as prompts
 from src.llm.llm_manager import LLMManager
 from src.llm.vectordb import VectordbManager
 from src.config import codebase_vectordb
@@ -41,6 +42,8 @@ class CodebaseInteraction:
         
         self.storage_obj = VectordbManager(config=default_vector_dbconfig,llm_manager=self.llm_manager)
 
+ 
+
         self.repo_index_directory = "file_db"
         self.repo_index_filename = "repo_index.json"
         self.repo_index_filepath = os.path.join(
@@ -49,7 +52,9 @@ class CodebaseInteraction:
         self.repo_index = self.load_repo_index()
         self.embedding_function = self.llm_manager.get_embedding()
 
-
+       ## initiating storage of code in vectordbmanager
+        _ = self.get_chroma_db()
+        
         # memory = ConversationSummaryMemory(
         #     llm=llm, memory_key="chat_history", return_messages=True
         # )
@@ -122,7 +127,7 @@ class CodebaseInteraction:
             texts = python_splitter.split_documents(documents)
             db = self.storage_obj.get_db().from_documents(
                 texts,
-                self.embedding_function(),
+                self.embedding_function,
                 persist_directory="output_db",
                 collection_name=self.extract_repo_name(),
             )
@@ -147,7 +152,9 @@ class CodebaseInteraction:
     def retrieval_qa_with_sources(self, query: str):
 
         chain_type_kwargs = {
-            "prompt": prompts.get_codeqa_prompt_hub(),
+            # "prompt": prompts.get_codeqa_prompt_hub(),
+            "prompt": prompts.get_codeqa_prompt(),
+            # "output_parser": StrOutputParser(),
         }
 
         qa = RetrievalQA.from_chain_type(
@@ -160,3 +167,4 @@ class CodebaseInteraction:
         )
         result = qa({"query": query})
         return result
+
