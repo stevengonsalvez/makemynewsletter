@@ -32,13 +32,13 @@ if st.session_state.clicked:
     if validators.url(git_repo):
         codebase =  CodebaseInteraction(llm_manager=llm_mgr,repo_url=git_repo)
         print (codebase.repo_index, "repo index")
-        query = st.text_input("Ask a question about the codebase:", key="query_input")
-        if st.button("Ask"):
+        query = st.chat_input("Ask a question about the codebase:", key="query_input")
+        if query:
             with st.spinner("Generating response..."):
                 print ("query", query)
                 result = codebase.retrieval_qa_with_sources(query)
                 st.chat_message("human").write(query)
-                st.chat_message("ai").write(str(result))
+                st.chat_message("ai").write(result['result'])
     else:
         st.write("Please enter a valid git repository url")
 
