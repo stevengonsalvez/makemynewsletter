@@ -10,10 +10,11 @@ from langchain.chains import RetrievalQAWithSourcesChain, RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.output_parsers import StrOutputParser
 import warnings
 import uuid
 import json
-import utils.prompts as prompts
+import src.utils.prompts as prompts
 from src.llm.llm_manager import LLMManager
 from src.llm.vectordb import VectordbManager
 from src.config import codebase_vectordb
@@ -151,7 +152,9 @@ class CodebaseInteraction:
     def retrieval_qa_with_sources(self, query: str):
 
         chain_type_kwargs = {
-            "prompt": prompts.get_codeqa_prompt_hub(),
+            # "prompt": prompts.get_codeqa_prompt_hub(),
+            "prompt": prompts.get_codeqa_prompt(),
+            # "output_parser": StrOutputParser(),
         }
 
         qa = RetrievalQA.from_chain_type(
@@ -164,3 +167,4 @@ class CodebaseInteraction:
         )
         result = qa({"query": query})
         return result
+
