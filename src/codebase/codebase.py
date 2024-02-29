@@ -18,6 +18,12 @@ import src.utils.prompts as prompts
 from src.llm.llm_manager import LLMManager
 from src.llm.vectordb import VectordbManager
 from src.config import codebase_vectordb
+import logging, logging.config
+
+# setup logging
+# set up logging
+logging.config.fileConfig("log.ini")
+logger = logging.getLogger("sLogger")
 
 warnings.simplefilter("ignore", category=DeprecationWarning)
 
@@ -34,15 +40,14 @@ class CodebaseInteraction:
         self.llm_manager = llm_manager
 
         default_vector_dbconfig = dict(
-                type=self.config_db["type"],
-                persist_directory=self.config_db["persist_directory"],
-                collection_name=self.extract_repo_name(),
-            )
-        
-        
-        self.storage_obj = VectordbManager(config=default_vector_dbconfig,llm_manager=self.llm_manager)
+            type=self.config_db["type"],
+            persist_directory=self.config_db["persist_directory"],
+            collection_name=self.extract_repo_name(),
+        )
 
- 
+        self.storage_obj = VectordbManager(
+            config=default_vector_dbconfig, llm_manager=self.llm_manager
+        )
 
         self.repo_index_directory = "file_db"
         self.repo_index_filename = "repo_index.json"
@@ -52,9 +57,9 @@ class CodebaseInteraction:
         self.repo_index = self.load_repo_index()
         self.embedding_function = self.llm_manager.get_embedding()
 
-       ## initiating storage of code in vectordbmanager
+        ## initiating storage of code in vectordbmanager
         _ = self.get_chroma_db()
-        
+
         # memory = ConversationSummaryMemory(
         #     llm=llm, memory_key="chat_history", return_messages=True
         # )
@@ -91,7 +96,7 @@ class CodebaseInteraction:
 
     def save_repo_index(self):
         with open(self.repo_index_filepath, "w") as file:
-            print(self.repo_index_filepath)
+            logger.debug(self.repo_index_filepath)
             json.dump(self.repo_index, file)
 
     # Function to extract the last part of a github repo url string
@@ -143,7 +148,9 @@ class CodebaseInteraction:
 
         qa = ConversationalRetrievalChain.from_llm(
             llm=self.llm_manager.get_llm(),
-            retriever=self.storage_obj.get_db().as_retriever(search_type="mmr", search_kwargs={"k": 8}),
+            retriever=self.storage_obj.get_db().as_retriever(
+                search_type="mmr", search_kwargs={"k": 8}
+            ),
             memory=self.memory,
         )
         result = qa(query)
@@ -153,18 +160,25 @@ class CodebaseInteraction:
 
         chain_type_kwargs = {
             # "prompt": prompts.get_codeqa_prompt_hub(),
-            "prompt": prompts.get_codeqa_prompt(),
+            "prompt": prompts.get_code_chat_prompt(),
             # "output_parser": StrOutputParser(),
         }
 
+        logger.debug("whats in the memory", self.memory)
         qa = RetrievalQA.from_chain_type(
             llm=self.llm_manager.get_llm(),
             chain_type="stuff",
-            retriever=self.storage_obj.get_db().as_retriever(search_type="mmr", search_kwargs={"k": 8}),
+            retriever=self.storage_obj.get_db().as_retriever(
+                search_type="mmr", search_kwargs={"k": 8}
+            ),
             memory=self.memory,
             return_source_documents=True,
             chain_type_kwargs=chain_type_kwargs,
         )
         result = qa({"query": query})
+        # The line `logger.debug(result)` is logging the `result` variable at the debug level using
+        # the logger instance named `logger`. This means that the value of the `result` variable will
+        # be output to the log file or console if the logging level is set to debug or lower. It is a
+        # way to provide additional information or debug messages during the execution of the code.
+        logger.debug(result)
         return result
-
