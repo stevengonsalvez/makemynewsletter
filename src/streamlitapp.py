@@ -14,11 +14,14 @@ llm_mgr = llm_manager.LLMManager(config=codebase_llm)
 
 
 # Streamlit UI
+st.set_page_config(page_title="Code Companion", page_icon="🤖")
 st.title("Codebase interaction app")
+st.header("Code Companion")
+
 msgs = StreamlitChatMessageHistory(key="langchain_messages")
 view_messages = st.expander("View the message contents in session state")
 
-git_repo = st.text_input("Enter a git repository url:") 
+git_repo = st.sidebar.text_input("Enter a git repository url:") 
 
 if "clicked" not in st.session_state:
     st.session_state.clicked = False
@@ -27,15 +30,15 @@ def click_button():
     st.session_state.clicked = True
     # user input prompt that will accept a git repository url
 
-st.button("Run", on_click=click_button)
+st.sidebar.button("Run", on_click=click_button)
 
 
 # Display messages from history
 for msg in msgs.messages:
     st.chat_message(msg.type).write(msg.content)
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "langchain_messages" not in st.session_state:
+    st.session_state.langchain_messages = []
 
 if st.session_state.clicked:
     if validators.url(git_repo):
@@ -50,7 +53,6 @@ if st.session_state.clicked:
                 config = {"configurable": {"session_id": "any"}}
                 result = codebase.retrieval_qa_with_sources(query)
                 st.chat_message("ai").write(result['result'])
-                st.session_state.messages.append({"role": "user", "content": query})
     else:
         st.write("Please enter a valid git repository url")
 
