@@ -72,6 +72,7 @@ class CodebaseInteraction:
             input_key="query",
             output_key="result",
         )
+        logger.debug("initiated codebase interaction")
 
     def load_repo_index(self):
         # Ensure the directory exists
@@ -154,7 +155,7 @@ class CodebaseInteraction:
             memory=self.memory,
         )
         result = qa(query)
-        return result
+        logger.debug(f"result: {result}")
 
     def retrieval_qa_with_sources(self, query: str):
 
@@ -163,8 +164,8 @@ class CodebaseInteraction:
             "prompt": prompts.get_code_chat_prompt(),
             # "output_parser": StrOutputParser(),
         }
-
-        logger.debug("whats in the memory", self.memory)
+        print ("entering retrieval_qa_with_sources")
+        # logger.debug("whats in the memory", self.memory)
         qa = RetrievalQA.from_chain_type(
             llm=self.llm_manager.get_llm(),
             chain_type="stuff",
@@ -175,7 +176,9 @@ class CodebaseInteraction:
             return_source_documents=True,
             chain_type_kwargs=chain_type_kwargs,
         )
+
         result = qa({"query": query})
+        print ("retrieval successful")
         # The line `logger.debug(result)` is logging the `result` variable at the debug level using
         # the logger instance named `logger`. This means that the value of the `result` variable will
         # be output to the log file or console if the logging level is set to debug or lower. It is a
